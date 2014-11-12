@@ -1,0 +1,59 @@
+---
+title: "Data Science Capstone Task 1"
+author: "Kevin Spring"
+date: "11/12/2014"
+output: html_document
+---
+
+```{r}
+library(RWeka)
+library(tm)
+```
+## Load in part of the data
+
+```{r}
+blog_location <- '~/Dropbox/courses/coursera/DataScience/10_Capstone/data/final/en_US/en_US.blogs.txt'
+blogs <- readLines(blog_location, 248)
+```
+
+## Clean the data
+
+```{r}
+myCorpus <- Corpus(VectorSource(blogs)) # create the corpus
+
+# set all words to lowercase
+myCorpus <- tm_map(myCorpus, content_transformer(tolower))
+# remove profanity
+badWordList <- source('files/BadWordList.R') # load Googles bad word list
+myCorpus <- tm_map(myCorpus, removeWords, badWordList$value)
+# remove stopwords
+myCorpus <- tm_map(myCorpus, removeWords, stopwords('english'))
+# remove punctuation
+myCorpus <- tm_map(myCorpus, removePunctuation)
+# remove numbers
+myCorpus <- tm_map(myCorpus, removeNumbers)
+# remove extra whitespace
+myCorpus <- tm_map(myCorpus, stripWhitespace)
+
+# Stem the corpus
+#myCorpusStem <- tm_map(myCorpus, stemDocument, language='english')
+
+## Test that the words are removed
+#ddtm <- DocumentTermMatrix(myCorpus)
+dtm <- DocumentTermMatrix(myCorpus)
+findFreqTerms(dtm, 50)
+
+# Find terms that correlate (collocate)
+findAssocs(dtm, "oil", 0.8)
+
+# Remove sparse terms
+inspect(removeSparseTerms(dtm, .9))
+```
+
+### Tokenization
+
+Tokenization is the process of breaking a stream of text up into words, phrases, symbols, or other meaningful elements called tokens. Since I am interested in predicting a word as it is being typed and that word is selected predict the next word to be typed, I need to tokenize the words based on two word combinations.
+
+```{r}
+BigramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min=2, max=2))
+```

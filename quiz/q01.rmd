@@ -1,0 +1,66 @@
+---
+title: "Coursera Data Science Capstone"
+author: "Kevin Spring"
+date: "11/10/2014"
+output: html_document
+---
+
+## Question 2
+The `en_US.twitter.txt has how many lines of text?
+
+```{r}
+# File locations
+twitter_location <- '~/Dropbox/courses/coursera/DataScience/10_Capstone/data/final/en_US/en_US.twitter.txt'
+blog_location <- '~/Dropbox/courses/coursera/DataScience/10_Capstone/data/final/en_US/en_US.blogs.txt'
+news_location <- '~/Dropbox/courses/coursera/DataScience/10_Capstone/data/final/en_US/en_US.news.txt'
+
+# load in the data
+twitter <- readLines(twitter_location)
+news <- readLines(news_location)
+blogs <- readLines(blog_location)
+
+# Question 2 answer
+length(twitter)
+```
+
+## Question 3
+What is the length of the longest line seen in any of the three en_US data sets?
+
+```{r}
+twitter_max <- max(nchar(twitter))
+news_max <- max(nchar(news))
+blog_max <- max(nchar(blogs))
+
+longest_line <- function(dataset) {
+    for line in 1:length(1:dataset) {
+        nchar
+    }
+}
+```
+## Question 4
+In the en_US twitter data set, if you divide the number of lines where the word "love" (all lowercase) occurs by the number of lines the word "hate" (all lowercase) occurs, about what do you get?
+
+```{r}
+love_string <- 'love'
+hate_string <- 'hate'
+love <- twitter[which(grepl(love_string, twitter))]
+hate <- twitter[which(grepl(hate_string, twitter))]
+length(love)/length(hate)
+```
+
+## Question 5
+The one tweet in the en_US twitter data set that matches the word "biostats" says what?
+
+```{r}
+ch_string <- 'biostats'
+q5 <- grepl(ch_string, twitter)
+twitter[which(q5 == TRUE)]
+```
+## Question 6
+How many tweets have the exact characters "A computer once beat me at chess, but it was no match for me at kickboxing". (I.e. the line matches those characters exactly.) 
+
+```{r}
+string <- "A computer once beat me at chess, but it was no match for me at kickboxing"
+q6 <- grepl(string, twitter)
+length(which(q6==TRUE))
+```
