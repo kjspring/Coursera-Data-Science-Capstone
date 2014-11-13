@@ -12,14 +12,48 @@ library(tm)
 ## Load in part of the data
 
 ```{r}
+# File locations
+twitter_location <- '~/Dropbox/courses/coursera/DataScience/10_Capstone/data/final/en_US/en_US.twitter.txt'
 blog_location <- '~/Dropbox/courses/coursera/DataScience/10_Capstone/data/final/en_US/en_US.blogs.txt'
-blogs <- readLines(blog_location, 248)
+news_location <- '~/Dropbox/courses/coursera/DataScience/10_Capstone/data/final/en_US/en_US.news.txt'
+
+# load in the data
+twitter <- readLines(twitter_location)
+news <- readLines(news_location)
+blogs <- readLines(blog_location)
+
+# Random subset of the data
+random_twitter <- ceiling(runif(n=100000, min=0, max=length(twitter)))
+random_news <- ceiling(runif(n=20000, min=0, max=length(news)))
+random_blogs <- ceiling(runif(n=20000, min=0, max=length(blogs)))
+
+# subset
+twitter <- twitter[random_twitter]
+news <- news[random_news]
+blogs <- blogs[random_blogs]
+
+# export the data
+write.table(twitter, file='Task1/output/twitter.txt', row.names=FALSE, col.names=FALSE)
+write.table(news, file='Task1/output/news.txt', row.names=FALSE, col.names=FALSE)
+write.table(blogs, file='Task1/output/blogs.txt', row.names=FALSE, col.names=FALSE)
+```
+
+```{r}
+# load the random lines
+twitter <- readLines('Task1/output/twitter.txt')
+news <- readLines('Task1/output/news.txt')
+blogs <- readLines('Task1/output/blogs.txt')
 ```
 
 ## Clean the data
 
 ```{r}
-myCorpus <- Corpus(VectorSource(blogs)) # create the corpus
+# Remove any non-English characters
+twitter <- sapply(twitter, function(row) iconv(row, "latin1", "ASCII", sub=""))
+news <- sapply(news, function(row) iconv(row, "latin1", "ASCII", sub=""))
+blogs <- sapply(twitter, function(row) iconv(row, "latin1", "ASCII", sub=""))
+
+myCorpus <- Corpus(VectorSource(c(twitter, blogs, news))) # create the corpus
 
 # set all words to lowercase
 myCorpus <- tm_map(myCorpus, content_transformer(tolower))
@@ -34,20 +68,23 @@ myCorpus <- tm_map(myCorpus, removePunctuation)
 myCorpus <- tm_map(myCorpus, removeNumbers)
 # remove extra whitespace
 myCorpus <- tm_map(myCorpus, stripWhitespace)
+# correct spelling
+
 
 # Stem the corpus
 #myCorpusStem <- tm_map(myCorpus, stemDocument, language='english')
 
 ## Test that the words are removed
 #ddtm <- DocumentTermMatrix(myCorpus)
-dtm <- DocumentTermMatrix(myCorpus)
-findFreqTerms(dtm, 50)
+tdm <- TermDocumentMatrix(myCorpus, control = list(minWordLength = 2))
+dtm <- DocumentTermMatrix(myCorpus, control=list(minWordLength = 2))
+findFreqTerms(tdm, 1000)
 
 # Find terms that correlate (collocate)
 findAssocs(dtm, "oil", 0.8)
 
 # Remove sparse terms
-inspect(removeSparseTerms(dtm, .9))
+inspect(removeSparseTerms(dtm, .001))
 ```
 
 ### Tokenization
@@ -56,4 +93,5 @@ Tokenization is the process of breaking a stream of text up into words, phrases,
 
 ```{r}
 BigramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min=2, max=2))
+bigramTDM <- TermDocumentMatrix(myCorpus, control=list(tokenize = BigramTokenizer))
 ```

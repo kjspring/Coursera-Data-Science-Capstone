@@ -38,7 +38,7 @@ Natural language processing will be needed to be applied to accurately predict w
 6. What is the relationship between NLP and comcepts you learned in the specialization?
 
 ### About the data
-- The English language data contains 3 files from blogs, news sources, and twitter. Each file is 150 - 200 mb in size.
+- The corpus is an English language data contains 3 files from blogs, news sources, and twitter. Each file is 150 - 200 mb in size.
 - When I opened the twitter English file in gedit, I received a warning that there are invalid characters.
     - scanning through it there are some emoticons and heart symbols.
 

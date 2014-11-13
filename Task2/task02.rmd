@@ -1,0 +1,46 @@
+---
+title: "Data Science Capstone Task 02"
+author: "Kevin Spring"
+date: "11/12/2014"
+output: html_document
+---
+
+## Task 2 - Exploratory analysis
+
+```{r}
+# load packages
+library(RWeka)
+library(tm)
+library(wordcloud)
+
+data('crude')
+BigramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min = 2, max = 2))
+tdm <- TermDocumentMatrix(crude, control = list(tokenize = BigramTokenizer))
+inspect(tdm[340:345,1:10])
+
+```
+### Tasks to accomplish
+
+1. Exploratory analysis - perform a through exploratory analysis of the data, understanding the distribution of wrods and relationship between the words in the corpus.
+2. Understanding frequencies of words and word pairs - build figures and tables to understand variation in the frequencies of word and word pairs in the data
+
+### Questions to consider
+1. Some words are more frequent than others - what are the distributions of word frequencies?
+2. What are the frequencies of 2-gram and 3-gram in the dataset?
+3. How many unique words do you need in a frequency sorted dictionary to cover 50% of all word instances in the language? 90?
+4. How do you evaluate how many of the words come from foreign languages?
+5. Can you think of a way to increase the coverage -- identifying words that may not be in the corpora or using a smaller number of words in the dictionary to cover teh same number of phrases?
+
+```{r}
+# word cloud
+rand <- ceiling(runif(1000, min=0, max=length(myCorpus)))
+m <- as.matrix(tdm[c(rand), ])
+
+# calculate the word frequency
+v <- sort(rowSums(m), decreasing=TRUE)
+myNames <- names(v)
+k <- which(names(v)=="miners")
+myNames[k] <- "mining"
+d <- data.frame(words=myNames, freq=v)
+wordcloud(d$word, d$freq, min.freq=5)
+```
