@@ -1,0 +1,61 @@
+---
+title: "Data Science MIlestone Report"
+author: "Kevin Spring"
+date: "11/15/2014"
+output: html_document
+---
+
+## Basic summaries
+
+```{r}
+
+# Libraries
+library(RWeka)
+library(tm)
+library(SnowballC)
+
+# Load training data
+twitter <- readLines('Task1/output/twitter.txt')
+news <- readLines('Task1/output/news.txt')
+blogs <- readLines('Task1/output/blogs.txt')
+
+# Line counts
+
+# Word counts
+twitter_count <- sapply(gregexpr("\\W+", twitter), length) + 1
+
+# Basic data tables
+freq <- sort(rowSums(as.matrix(sparse)), decreasing=TRUE) # get the total frequencies of each stemmed word
+table1 <- data.frame(word=names(freq), freq=freq)
+freq2 <- sort(rowSums(as.matrix(sparse_nostop)), decreasing=TRUE)
+table2 <- data.frame(word=names(freq2), freq=freq2)
+bigram_freq <- sort(rowSums(as.matrix(bigramTDM)), decreasing=TRUE)
+table_bigram <- data.frame(word=names(bigram_freq), freq=bigram_freq)
+```
+
+## Plots
+
+```{r}
+
+# histogram to illustrate features of the data
+wf <- subset(head(table1, 10))
+wf_nostop <- subset(head(table2, 10))
+
+histogram <- ggplot(data=wf, aes(word, freq))
+histogram + 
+    geom_bar(stat="identity") +
+    theme(axis.text.x=element_text(angle=45, hjust=1))
+
+histogram <- ggplot(data=wf_nostop, aes(word, freq))
+histogram + 
+    geom_bar(stat="identity") +
+    theme(axis.text.x=element_text(angle=45, hjust=1))
+```
+
+## Figure 3: Bigram frequency chart
+
+```{r}
+
+
+```
+

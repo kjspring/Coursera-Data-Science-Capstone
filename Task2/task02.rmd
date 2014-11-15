@@ -15,11 +15,6 @@ library(wordcloud)
 library(ggplot2)
 library(qdap)
 
-data('crude')
-BigramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min = 2, max = 2))
-tdm2 <- TermDocumentMatrix(crude, control = list(tokenize = BigramTokenizer))
-inspect(tdm[340:345,1:10])
-
 ```
 ### Tasks to accomplish
 
@@ -54,21 +49,14 @@ wordcloud_creator <- function(m) {
     return(wordcloud(d$word, d$freq, min.freq=10000, rot.per=0.2, max.words=100, scale=c(5, .1), colors=brewer.pal(6, 'Dark2')))
     }
 corpus_m <- as.matrix(sparse)
-write.csv(corpus_m, file='Task1/output/tdm.csv')
+#write.csv(corpus_m, file='Task1/output/tdm.csv')
 corpus_nostop_m <- as.matrix(sparse_nostop)
-write.csv(corpus_nostop_m, file='Task1/output/tdm_nostop.csv')
+#write.csv(corpus_nostop_m, file='Task1/output/tdm_nostop.csv')
 
 wordcloud_creator(corpus_m)
 wordcloud_creator(corpus_nostop_m)
 ```
 
-```{r}
-# Figure 2: Correlation plot
-
-# Note: does not work
-plot(sparse, terms=findFreqTerms(tdm, lowfreq=100)[1:5], corThreshold=0.9)
-plot(sparse_nostop)
-```
 
 ```{r}
 # Figure 3: Frequency plot
@@ -88,7 +76,7 @@ ggplot(wf, aes(word, freq)) +
 ## Quantitative analysis of text
 
 ```{r}
-
+# Bigram frequency plot
 words <- tdm
 
 ```

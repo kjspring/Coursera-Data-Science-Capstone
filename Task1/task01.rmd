@@ -82,13 +82,17 @@ myCorpus <- tm_map(myCorpus, stripWhitespace)
 myCorpus_nostop <- tm_map(myCorpus_nostop, stripWhitespace)
 
 ## Make the Term Document matrix
-tdm <- TermDocumentMatrix(myCorpus, control = list(minWordLength = 2, weighting = 
-                                                       function(x) weightTfIdf(x, normalize = FALSE)))
-tdm_nostop <- TermDocumentMatrix(myCorpus_nostop, control = list(minWordLength = 2, weighting = 
-                                                       function(x) weightTfIdf(x, normalize = FALSE)))
+#tdm <- TermDocumentMatrix(myCorpus, control = list(minWordLength = 2, weighting = 
+#                                                       function(x) weightTfIdf(x, normalize = FALSE)))
+#tdm_nostop <- TermDocumentMatrix(myCorpus_nostop, control = list(minWordLength = 2, weighting = 
+#                                                       function(x) weightTfIdf(x, normalize = FALSE)))
+
+tdm <- TermDocumentMatrix(myCorpus, control = list(minWordLength = 2))
+tdm_nostop <- TermDocumentMatrix(myCorpus_nostop, control = list(minWordLength = 2))
+
 # Remove sparse terms (things like "aaaaaannnnndddddwer" are removed)
-sparse = removeSparseTerms(tdm, 0.99)
-sparse_nostop = removeSparseTerms(tdm_nostop, 0.99)
+sparse = removeSparseTerms(tdm, 0.999)
+sparse_nostop = removeSparseTerms(tdm_nostop, 0.999)
 
 # Find terms that correlate (collocate)
 #findAssocs(tdm, "oil", 0.8)
@@ -104,8 +108,13 @@ Tokenization is the process of breaking a stream of text up into words, phrases,
 ```{r}
 options(mc.cores=1)
 BigramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min=2, max=2))
+#TrigramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min=3, max=3))
 bigramTDM <- TermDocumentMatrix(myCorpus_nostop, control=list(tokenize = BigramTokenizer))
-a <- NGramTokenizer(corpus, Weka_control(min = 2, max = 3, delimiters = " \\r\\n\\t"))   
+# remove sparse terms
+bigramTDM <- removeSparseTerms(bigramTDM, 0.999)
+#options(mc.cores=4)
+#trigramTDM <- TermDocumentMatrix(myCorpus_nostop, control=list(tokenize = TrigramTokenizer))
+#a <- NGramTokenizer(corpus, Weka_control(min = 2, max = 3, delimiters = " \\r\\n\\t"))   
 ```
 
 ### Create a dictionary

@@ -1,0 +1,104 @@
+---
+title: "Rpub test"
+author: "Kevin Spring"
+date: "11/15/2014"
+output: html_document
+---
+
+This is just to test that publishing to Rpubs is working.
+
+```{r, echo=FALSE, cache=TRUE}
+library(RWeka)
+library(tm)
+library(SnowballC)
+library(ggplot2)
+
+## Load the training data
+twitter <- readLines('Task1/output/twitter.txt')
+news <- readLines('Task1/output/news.txt')
+blogs <- readLines('Task1/output/blogs.txt')
+
+# remove non-English characters
+twitter <- iconv(twitter, "latin1", "ASCII", sub="")
+news <- iconv(news, "latin1", "ASCII", sub="")
+blogs <- iconv(blogs, "latin1", "ASCII", sub="")
+
+# create the tm corpus object
+myCorpus <- Corpus(VectorSource(c(twitter, blogs, news))) # create the corpus
+
+# Data cleaning
+# set all words to lowercase
+myCorpus <- tm_map(myCorpus, content_transformer(tolower))
+# remove profanity
+badWordList <- source('files/BadWordList.R') # load Googles bad word list
+myCorpus <- tm_map(myCorpus, removeWords, badWordList$value)
+# remove punctuation
+myCorpus <- tm_map(myCorpus, removePunctuation)
+# remove numbers
+myCorpus <- tm_map(myCorpus, removeNumbers)
+
+# remove stopwords, save as new corpus
+myCorpus_nostop <- tm_map(myCorpus, removeWords, stopwords('english'))
+myCorpus_nostop <- tm_map(myCorpus_nostop, removeWords, c('like','the')) # remove like as a stopword
+
+# remove extra whitespace
+myCorpus <- tm_map(myCorpus, stripWhitespace)
+myCorpus_nostop <- tm_map(myCorpus_nostop, stripWhitespace)
+
+# Create the term document matrix
+tdm <- TermDocumentMatrix(myCorpus, control = list(minWordLength = 2))
+tdm_nostop <- TermDocumentMatrix(myCorpus_nostop, control = list(minWordLength = 2))
+
+# Remove sparse terms (things like "aaaaaannnnndddddwer" are removed)
+sparse = removeSparseTerms(tdm, 0.999)
+sparse_nostop = removeSparseTerms(tdm_nostop, 0.999)
+
+options(mc.cores=1)
+BigramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min=2, max=2))
+#TrigramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min=3, max=3))
+bigramTDM <- TermDocumentMatrix(myCorpus_nostop, control=list(tokenize = BigramTokenizer))
+# remove sparse terms
+bigramTDM <- removeSparseTerms(bigramTDM, 0.999)
+#options(mc.cores=4)
+#trigramTDM <- TermDocumentMatrix(myCorpus_nostop, control=list(tokenize = TrigramTokenizer))
+#a <- NGramTokenizer(corpus, Weka_control(min = 2, max = 3, delimiters = " \\r\\n\\t"))
+
+# remove excess objects
+#rm(c(twitter, blogs, myCorpus, myCorpus_nostop, news, tdm, tdm_nostop, badWordList ))
+```
+
+```{r, echo=FALSE}
+# Figure 1: word cloud
+wordcloud_creator <- function(m) {
+    v <- sort(rowSums(m), decreasing=TRUE)
+    myNames <- names(v)
+    k <- which(names(v)=="miners")
+    myNames[k] <- "mining"
+    d <- data.frame(words=myNames, freq=v)
+    return(wordcloud(d$word, d$freq, min.freq=10000, rot.per=0.2, max.words=100, scale=c(5, .1), colors=brewer.pal(6, 'Dark2')))
+    }
+corpus_m <- as.matrix(sparse)
+#write.csv(corpus_m, file='Task1/output/tdm.csv')
+corpus_nostop_m <- as.matrix(sparse_nostop)
+#write.csv(corpus_nostop_m, file='Task1/output/tdm_nostop.csv')
+
+wordcloud_creator(corpus_m)
+wordcloud_creator(corpus_nostop_m)
+```
+
+
+```{r, echo=FALSE}
+# histogram to illustrate features of the data
+wf <- subset(head(table1, 10))
+wf_nostop <- subset(head(table2, 10))
+
+histogram <- ggplot(data=wf, aes(word, freq))
+histogram + 
+    geom_bar(stat="identity") +
+    theme(axis.text.x=element_text(angle=45, hjust=1))
+
+histogram <- ggplot(data=wf_nostop, aes(word, freq))
+histogram + 
+    geom_bar(stat="identity") +
+    theme(axis.text.x=element_text(angle=45, hjust=1))
+```

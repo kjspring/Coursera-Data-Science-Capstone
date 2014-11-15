@@ -21,6 +21,8 @@ blogs <- readLines(blog_location)
 
 # Question 2 answer
 length(twitter)
+length(news)
+length(blogs)
 ```
 
 ## Question 3
