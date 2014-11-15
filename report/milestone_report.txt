@@ -1,0 +1,32 @@
+# Milestone Report
+
+## Purpose
+The purpose of this project is to predict a word a user is typing and also predict a successive word after a word is typed.
+
+## Introduction
+
+### Explain the data
+
+#### Where it was obtained
+#### How it was randomly selected
+
+## Results
+
+### How is frequency measured
+
+### Basic text cleaning
+
+### Removal of pointless words
+
+### Profanity removal
+Profanity is commonly used in the corpus but serves no prediction value to this project. The same profanity word can be used as a verb, noun, adverb, or adjecting and thus prediction is limited for these words. As a user interface tool, showing profanity for predicted words if the user did not want to see may cause the user to use a competitor's product. If the user uses profanity then those words can be added to the dictionary of the final tool to accurately predict and suit the user's language style.
+
+### Stop word removal
+Stop words are common words used in languages such as function words such as, the, is, at, which, and on. While it is important to accurately predict these words in this project, the inclusion of these words in the main prediction algorithm would over estimate the user wanting to type these words versus other words. See Fig X to compare the most common words with and without stop word removal. A second prediction algorithm can be used to accurately predict stop word use on a bigram model.
+
+### Stemming
+Stemming is the process of removing common word endings such as '-ed', '-ing', and so forth. The reason the terms are removed is to more accurately measure the frequency of the root word and not see the frequency of each individual root+stem. This leads to greater prediction of which stem word will be used after a user inputs a word. The final stem can be quickly displayed to the user to select the stem when the root is accurately predicted.
+
+### Correlated terms
+If two words always appear together then the correlation would be 1.0. If they never appear together the correlation would be 0. This correlation is a measurement of how closely associated the words are in the corpus.
+## Conclusions

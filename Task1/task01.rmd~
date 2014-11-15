@@ -1,0 +1,110 @@
+---
+title: "Data Science Capstone Task 1"
+author: "Kevin Spring"
+date: "11/12/2014"
+output: html_document
+---
+
+```{r}
+library(RWeka)
+library(tm)
+library(SnowballC)
+```
+## Load in part of the data
+
+```{r}
+# File locations
+twitter_location <- '~/Dropbox/courses/coursera/DataScience/10_Capstone/data/final/en_US/en_US.twitter.txt'
+blog_location <- '~/Dropbox/courses/coursera/DataScience/10_Capstone/data/final/en_US/en_US.blogs.txt'
+news_location <- '~/Dropbox/courses/coursera/DataScience/10_Capstone/data/final/en_US/en_US.news.txt'
+
+# load in the data
+twitter <- readLines(twitter_location)
+news <- readLines(news_location)
+blogs <- readLines(blog_location)
+
+# Random subset of the data
+random_twitter <- ceiling(runif(n=50000, min=0, max=length(twitter)))
+random_news <- ceiling(runif(n=20000, min=0, max=length(news)))
+random_blogs <- ceiling(runif(n=20000, min=0, max=length(blogs)))
+
+# subset
+twitter <- twitter[random_twitter]
+news <- news[random_news]
+blogs <- blogs[random_blogs]
+
+# export the data
+write.table(twitter, file='Task1/output/twitter.txt', row.names=FALSE, col.names=FALSE)
+write.table(news, file='Task1/output/news.txt', row.names=FALSE, col.names=FALSE)
+write.table(blogs, file='Task1/output/blogs.txt', row.names=FALSE, col.names=FALSE)
+```
+
+```{r}
+# load the random lines
+twitter <- readLines('Task1/output/twitter.txt')
+news <- readLines('Task1/output/news.txt')
+blogs <- readLines('Task1/output/blogs.txt')
+```
+
+
+## Clean the data
+
+```{r}
+# remove non-English characters
+twitter <- iconv(twitter, "latin1", "ASCII", sub="")
+news <- iconv(news, "latin1", "ASCII", sub="")
+blogs <- iconv(blogs, "latin1", "ASCII", sub="")
+
+myCorpus <- Corpus(VectorSource(c(twitter, blogs, news))) # create the corpus
+
+# set all words to lowercase
+myCorpus <- tm_map(myCorpus, content_transformer(tolower))
+# remove profanity
+badWordList <- source('files/BadWordList.R') # load Googles bad word list
+myCorpus <- tm_map(myCorpus, removeWords, badWordList$value)
+# remove punctuation
+myCorpus <- tm_map(myCorpus, removePunctuation)
+# remove numbers
+myCorpus <- tm_map(myCorpus, removeNumbers)
+
+# correct spelling
+
+# remove stopwords, save as new corpus
+myCorpus_nostop <- tm_map(myCorpus, removeWords, stopwords('english'))
+myCorpus_nostop <- tm_map(myCorpus_nostop, removeWords, c('like','the')) # remove like as a stopword
+
+# Stem the corpus
+myCorpus <- tm_map(myCorpus, stemDocument, language='english')
+myCorpus_nostop <- tm_map(myCorpus_nostop, stemDocument, language='english')
+
+# remove extra whitespace
+myCorpus <- tm_map(myCorpus, stripWhitespace)
+myCorpus_nostop <- tm_map(myCorpus_nostop, stripWhitespace)
+
+## Make the Term Document matrix
+tdm <- TermDocumentMatrix(myCorpus, control = list(minWordLength = 2, weighting = 
+                                                       function(x) weightTfIdf(x, normalize = FALSE)))
+tdm_nostop <- TermDocumentMatrix(myCorpus_nostop, control = list(minWordLength = 2, weighting = 
+                                                       function(x) weightTfIdf(x, normalize = FALSE)))
+# Remove sparse terms (things like "aaaaaannnnndddddwer" are removed)
+sparse = removeSparseTerms(tdm, 0.99)
+sparse_nostop = removeSparseTerms(tdm_nostop, 0.99)
+
+# Find terms that correlate (collocate)
+findAssocs(tdm, "oil", 0.8)
+
+# Remove sparse terms
+inspect(removeSparseTerms(tdm, .1))
+```
+
+### Tokenization
+
+Tokenization is the process of breaking a stream of text up into words, phrases, symbols, or other meaningful elements called tokens. Since I am interested in predicting a word as it is being typed and that word is selected predict the next word to be typed, I need to tokenize the words based on two word combinations.
+
+```{r}
+BigramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min=2, max=2))
+#bigramTDM <- TermDocumentMatrix(myCorpus_nostop, control=list(tokenize = BigramTokenizer))
+NGramTokenizer(corpus, Weka_control(min = 2, max = 3, delimiters = " \\r\\n\\t"))   
+```
+
+###
