@@ -5,13 +5,12 @@ date: "11/15/2014"
 output: html_document
 ---
 
-This is just to test that publishing to Rpubs is working.
-
-```{r, echo=FALSE, cache=TRUE}
-library(RWeka)
-library(tm)
-library(SnowballC)
-library(ggplot2)
+```{r data analysis, comment="", echo=FALSE}
+require(RWeka)
+require(tm)
+require(SnowballC)
+require(ggplot2)
+require(wordcloud)
 
 ## Load the training data
 twitter <- readLines('Task1/output/twitter.txt')
@@ -50,13 +49,13 @@ tdm <- TermDocumentMatrix(myCorpus, control = list(minWordLength = 2))
 tdm_nostop <- TermDocumentMatrix(myCorpus_nostop, control = list(minWordLength = 2))
 
 # Remove sparse terms (things like "aaaaaannnnndddddwer" are removed)
-sparse = removeSparseTerms(tdm, 0.999)
-sparse_nostop = removeSparseTerms(tdm_nostop, 0.999)
+sparse = removeSparseTerms(tdm, 0.995)
+sparse_nostop = removeSparseTerms(tdm_nostop, 0.995)
 
 options(mc.cores=1)
 BigramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min=2, max=2))
 #TrigramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min=3, max=3))
-bigramTDM <- TermDocumentMatrix(myCorpus_nostop, control=list(tokenize = BigramTokenizer))
+bigramTDM <- TermDocumentMatrix(myCorpus_nostop, control=list(wordLengths=c(2, 45), tokenize = BigramTokenizer))
 # remove sparse terms
 bigramTDM <- removeSparseTerms(bigramTDM, 0.999)
 #options(mc.cores=4)
@@ -67,7 +66,48 @@ bigramTDM <- removeSparseTerms(bigramTDM, 0.999)
 #rm(c(twitter, blogs, myCorpus, myCorpus_nostop, news, tdm, tdm_nostop, badWordList ))
 ```
 
+## Introduction
+
+The purpose of this project is to predict a word a user is typing and also predict a successive word after a word is typed. The final product will be a web application that allows a user to input text into a text field. The application will predict what word they are typing and display a few words that are predicted. The user can click on these words for faster user input if the words are correctly predicted or continue to type. As the user continues to input characters the application will continue to display predicted words on the sequence of character inputs. After a word is inputted or selected by the user, the application will predict what next word the user will input and display a list of possible predicted words or phrases. The user can select the application predicted text or continue to input characters.
+
+## Data Manipulation
+
+The data used in this analysis is text from english language twitter feeds, blogs, and news. The twitter, news, and blog text data has 2,360,148, 1,010,242, and 899,288 lines of code, respectively.
+
+The training data set was limited to 50,000, 20,000, and 20,000 lines of code for the twitter, news, and blog text data, respectively. This training set was selected by taking a random sample of each of the twitter, news, and blog text data sets. Before we can accuratly assess how many words are in each line of text the data needs to be cleaned. I used the R programming language with the `tm` package to analyze the text data.
+
+## Results
+
+The first step is to remove any non-Latin characters in the data set. Althought this data is classified as English, there is non-Latin characters in the data. The characters removed includes emoticons, Chinese hanzi, and Japanese kana. Arabic numbers are also removed from the training data. There were a total of 85521 terms in the combined twitter, news, and blog text data. 
+
+A further reduction of words such as onomatopoeias and profanity filters the data set to 2108 terms. Profanity is commonly used in the corpus but serves no prediction value to this project. The same profanity word can be used as a verb, noun, adverb, or adjective and thus prediction is limited for these words. As a user interface tool, showing profanity for predicted words if the user did not want to see may cause the user to use a competitor's product. If the user uses profanity then those words can be added to the dictionary of the final tool to accurately predict and suit the user's language style.
+
+As shown in Table 1, the ten most common terms are stop words. Table 2 shows the ten most common words with stop words removed from the corpus. Unlike most test data analysis, I will be keeping stop words in the corpus. Term frequency was measured using the number of times a term is used in a document.
+
+```{r tables, echo=FALSE}
+# Basic data tables
+freq <- sort(rowSums(as.matrix(sparse)), decreasing=TRUE) # get the total frequencies of each stemmed word
+table1 <- data.frame(word=names(freq), freq=freq)
+rm(freq)
+freq2 <- sort(rowSums(as.matrix(sparse_nostop)), decreasing=TRUE)
+table2 <- data.frame(word=names(freq2), freq=freq2)
+rm(freq2)
+bigram_freq <- sort(rowSums(as.matrix(bigramTDM)), decreasing=TRUE)
+table_bigram <- data.frame(word=names(bigram_freq), freq=bigram_freq)
+```
+
+### Table 1: Ten most frequent terms including stop words
 ```{r, echo=FALSE}
+head(table1, 10)
+```
+
+### Table 1: Ten most frequent terms with stop words removed
+```{r, echo=FALSE}
+head(table2, 10)
+```
+
+
+```{r wordcloud, echo=FALSE}
 # Figure 1: word cloud
 wordcloud_creator <- function(m) {
     v <- sort(rowSums(m), decreasing=TRUE)
@@ -75,19 +115,26 @@ wordcloud_creator <- function(m) {
     k <- which(names(v)=="miners")
     myNames[k] <- "mining"
     d <- data.frame(words=myNames, freq=v)
-    return(wordcloud(d$word, d$freq, min.freq=10000, rot.per=0.2, max.words=100, scale=c(5, .1), colors=brewer.pal(6, 'Dark2')))
+    return(wordcloud(d$word, d$freq, min.freq=7500, rot.per=0.2, max.words=100, scale=c(5, .1), colors=brewer.pal(6, 'Dark2')))
     }
 corpus_m <- as.matrix(sparse)
 #write.csv(corpus_m, file='Task1/output/tdm.csv')
 corpus_nostop_m <- as.matrix(sparse_nostop)
 #write.csv(corpus_nostop_m, file='Task1/output/tdm_nostop.csv')
+```
 
+### Figure 1: Word cloud of corpus
+```{r, echo=FALSE}
 wordcloud_creator(corpus_m)
+```
+
+### Figure 2: Word cloud of corpus without stop words
+```{r, echo=FALSE}
 wordcloud_creator(corpus_nostop_m)
 ```
 
-
-```{r, echo=FALSE}
+### Figure 3: Frequency distri
+```{r histogram, echo=FALSE}
 # histogram to illustrate features of the data
 wf <- subset(head(table1, 10))
 wf_nostop <- subset(head(table2, 10))
@@ -102,3 +149,21 @@ histogram +
     geom_bar(stat="identity") +
     theme(axis.text.x=element_text(angle=45, hjust=1))
 ```
+
+### Word Correlation Analysis
+A bigram is two words that appear in a sequence. For example, "happy birthday" would be a bigram. Table 3 shows the top ten bigrams in the corpus after sparse terms were removed. Figure 4 shows the word cloud of the most bigrams.
+
+#### Ten most common bigrams
+```{r, echo=FALSE}
+# Table 3
+head(table_bigram, 10)
+```
+
+#### Figure 4: Relationship map of most common words with a correlation of 0.8
+
+```{r relationship map, echo=FALSE}
+bigramTDM_m <- as.matrix(bigramTDM)
+wordcloud_creator(bigramTDM_m)
+```
+## Conclusions
+This analysis shows that it is possible to use various text data to find the most commonly used words and words that are highly correlated with each other. This is important analysis for the final steps in predicting what text is being inputted by the user. The next step is to run the prediction algorithms on the training data and build the web application to predict user text input.

@@ -14,7 +14,7 @@ library(tm)
 library(wordcloud)
 library(ggplot2)
 library(qdap)
-
+library(magrittr)
 ```
 ### Tasks to accomplish
 
@@ -77,12 +77,39 @@ ggplot(wf, aes(word, freq)) +
 
 ```{r}
 # Bigram frequency plot
-words <- tdm
+words <- sparse                                                       %>%
+  as.matrix                                                           %>%
+  rownames                                                            %>%
+  (function(x) x[nchar(x) < 20])
+
+data.frame(nletters=nchar(words))                                     %>%
+  ggplot(aes(x=nletters))                                              + 
+  geom_histogram(binwidth=1)                                           +
+  geom_vline(xintercept=mean(nchar(words)), 
+             colour="green", size=1, alpha=.5)                         + 
+  labs(x="Number of Letters", y="Number of Words")
 
 ```
 
 # Figure 4: Word length counts
 
 ```{r}
+library(dplyr)
+library(stringr)
+library(qdap)
 
+words                                                                 %>%
+  lapply(function(x) sapply(letters, gregexpr, x, fixed=TRUE))        %>%
+  unlist                                                              %>%
+  (function(x) x[x!=-1])                                              %>%
+  (function(x) setNames(x, gsub("\\d", "", names(x))))                %>%
+  (function(x) apply(table(data.frame(letter=toupper(names(x)), 
+                                      position=unname(x))),
+                     1, function(y) y/length(x)))                     %>%
+  qheat(high="green", low="yellow", by.column=NULL, 
+        values=TRUE, digits=3, plot=FALSE)                             +
+  ylab("Letter")                                                       + 
+  xlab("Position")                                                     + 
+  theme(axis.text.x=element_text(angle=0))                             +
+  guides(fill=guide_legend(title="Proportion"))
 ```
